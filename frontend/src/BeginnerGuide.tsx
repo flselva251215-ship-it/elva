@@ -39,6 +39,15 @@ export function BeginnerGuide({
   demo: boolean;
 }) {
   const guide = pageGuides[page] ?? pageGuides[0];
+  const focus = [
+    "先看收益率，再看风险原因，最后看现金占比；这些是三个不同的问题。",
+    "持仓数量、买入成本和仓位，决定你承担的风险，不要只看股价。",
+    "风险分数不是上涨概率；先看它为什么触发，再比较假设情景。",
+    "历史指标只能帮助理解过去，不能保证未来涨跌。",
+    "模拟交易使用虚拟资金，不连接券商，也不代表可以承担同样的真实损失。",
+    "触发提醒意味着需要复核；没有提醒也不代表没有风险。",
+    "真实账户资料不要上传公开演示页面，先确认数据保护方式。",
+  ][page] ?? "先学会读数据，再判断风险。";
   return (
     <section className="beginner-guide" aria-label="新手学习指南">
       <div className="beginner-guide-heading">
@@ -48,6 +57,7 @@ export function BeginnerGuide({
           <p>{guide.explain}</p>
         </div>
       </div>
+      <p className="beginner-keyline"><mark className="beginner-highlight">划重点</mark><strong>{focus}</strong></p>
       {page === 0 && (
         <div className="beginner-learning-steps" aria-label="新手三步学习路线">
           {learningSteps.map((step) => (
