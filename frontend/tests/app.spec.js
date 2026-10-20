@@ -42,6 +42,29 @@ test("navigation: four collapsible groups work on desktop and mobile", async ({ 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test("overview: performance risk and allocation guidance appear first", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(start);
+  const priority = page.locator(".overview-priority-grid");
+  await expect(priority).toBeVisible();
+  await expect(priority.getByText("当前收益状况", { exact: true })).toBeVisible();
+  await expect(priority.getByText("风险评估", { exact: true })).toBeVisible();
+  await expect(priority.getByText("资金配置观察", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "配置观察与行动参考" })).toBeVisible();
+  await expect(page.locator(".overview-advice-item")).toHaveCount(3);
+  await expect(priority.getByText("总资产", { exact: true })).toBeHidden();
+  await page.getByRole("button", { name: "展开总资产、今日盈亏与现金明细" }).click();
+  await expect(priority.getByText("总资产", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "收起收益与资产明细" }).click();
+  await expect(priority.getByText("总资产", { exact: true })).toBeHidden();
+  await page.getByRole("button", { name: "查看风险详情" }).click();
+  await expect(page.getByRole("heading", { name: "风控中心", exact: true }).first()).toBeVisible();
+  await clickNav(page, "资产总览");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".overview-advice-item")).toHaveCount(3);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test("desktop: dashboard, diagnostics, research, rules and import", async ({
   page,
 }) => {
