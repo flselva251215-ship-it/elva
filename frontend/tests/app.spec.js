@@ -1,9 +1,46 @@
 import { test, expect } from "@playwright/test";
+const groupForMenuItem = {
+  "资产总览": "资产管理",
+  "我的持仓": "资产管理",
+  "持仓诊断": "研究分析",
+  "股票研究": "研究分析",
+  "模拟交易": "交易与风控",
+  "风控中心": "交易与风控",
+  "导入与设置": "系统设置",
+};
+async function clickNav(page, name) {
+  const nav = page.getByRole("navigation", { name: "功能导航" });
+  const group = nav.getByRole("button", { name: groupForMenuItem[name], exact: true });
+  if ((await group.getAttribute("aria-expanded")) !== "true") await group.click();
+  await nav.getByRole("button", { name, exact: true }).click();
+}
+
 const offline = process.env.STOCKPILOT_OFFLINE_TEST === "1";
 const hostedDemo = process.env.STOCKPILOT_HOSTED_DEMO_TEST === "1";
 const start = offline
   ? "http://127.0.0.1:8012/StockPilot-%E6%BC%94%E7%A4%BA%E4%BD%93%E9%AA%8C.html"
   : "/";
+
+test("navigation: four collapsible groups work on desktop and mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(start);
+  const nav = page.getByRole("navigation", { name: "功能导航" });
+  const assets = nav.getByRole("button", { name: "资产管理", exact: true });
+  const research = nav.getByRole("button", { name: "研究分析", exact: true });
+  await expect(assets).toHaveAttribute("aria-expanded", "true");
+  await expect(research).toHaveAttribute("aria-expanded", "false");
+  await expect(nav.getByRole("button", { name: "我的持仓" })).toBeVisible();
+  await research.click();
+  await expect(research).toHaveAttribute("aria-expanded", "true");
+  await expect(assets).toHaveAttribute("aria-expanded", "false");
+  await clickNav(page, "股票研究");
+  await expect(page.getByRole("heading", { name: "股票研究", exact: true }).first()).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await clickNav(page, "模拟交易");
+  await expect(page.getByRole("heading", { name: "模拟交易", exact: true }).first()).toBeVisible();
+  await expect(nav.getByRole("button", { name: "交易与风控", exact: true })).toHaveAttribute("aria-expanded", "true");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
 
 test("desktop: dashboard, diagnostics, research, rules and import", async ({
   page,
@@ -21,10 +58,7 @@ test("desktop: dashboard, diagnostics, research, rules and import", async ({
     path: "../docs/screenshots/dashboard.png",
     fullPage: true,
   });
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "我的持仓" })
-    .click();
+  await clickNav(page, "我的持仓");
   await page.getByRole("textbox", { name: "搜索持仓" }).fill("茅台");
   await expect(page.getByRole("table").getByRole("row")).toHaveCount(2);
   await page.getByRole("button", { name: "分析贵州茅台" }).click();
@@ -36,10 +70,7 @@ test("desktop: dashboard, diagnostics, research, rules and import", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "生成报告" }).click();
   await expect(page.getByRole("button", { name: "下载 JSON" })).toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "股票研究" })
-    .click();
+  await clickNav(page, "股票研究");
   await page.getByRole("textbox", { name: "搜索股票" }).fill("NVDA");
   await page.getByRole("button", { name: "英伟达 NVDA" }).click();
   await expect(
@@ -49,17 +80,11 @@ test("desktop: dashboard, diagnostics, research, rules and import", async ({
   await expect(
     page.getByRole("button", { name: "添加收藏英伟达" }),
   ).toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "风控中心" })
-    .click();
+  await clickNav(page, "风控中心");
   await page.getByRole("spinbutton", { name: "单股仓位上限 (%)" }).fill("20");
   await page.getByRole("button", { name: "保存风险规则" }).click();
   await expect(page.getByRole("status")).toContainText("风控规则已保存");
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "导入与设置" })
-    .click();
+  await clickNav(page, "导入与设置");
   await page.getByRole("button", { name: "校验并预览" }).click();
   await expect(page.getByText("预览：可接受 1 行")).toBeVisible();
   await page.getByRole("button", { name: "确认导入" }).click();
@@ -74,10 +99,7 @@ test("paper: manual demo consent, buy/sell, realized P&L, cancel", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(start);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "模拟交易" })
-    .click();
+  await clickNav(page, "模拟交易");
   await expect(
     page.getByRole("heading", { name: "创建模拟交易计划" }),
   ).toBeVisible();
@@ -116,19 +138,13 @@ test("mobile: responsive navigation, editable trade and CSV errors", async ({
     path: "../docs/screenshots/mobile.png",
     fullPage: true,
   });
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "我的持仓" })
-    .click();
+  await clickNav(page, "我的持仓");
   await page.getByRole("button", { name: "录入交易" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByRole("dialog").getByLabel("成交价 (USD)").fill("219");
   await page.getByRole("button", { name: "保存交易" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "导入与设置" })
-    .click();
+  await clickNav(page, "导入与设置");
   await page
     .getByRole("textbox", { name: "CSV内容" })
     .fill(
@@ -184,10 +200,7 @@ test("theme, interactive chart, help, account switch and all home shortcuts", as
     ["分析报告", "持仓诊断"],
     ["美股与 A 股持仓", "我的持仓"],
   ]) {
-    await page
-      .getByRole("navigation")
-      .getByRole("button", { name: "资产总览" })
-      .click();
+    await clickNav(page, "资产总览");
     await page
       .locator(".home-shortcuts")
       .getByRole("button", { name: new RegExp(button) })
@@ -202,10 +215,7 @@ test("trade edit/delete, downloads, rules, reports and mobile navigation", async
   page,
 }) => {
   await page.goto(start);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "导入与设置" })
-    .click();
+  await clickNav(page, "导入与设置");
   const template = page.waitForEvent("download");
   await page.getByRole("button", { name: "下载模板", exact: true }).click();
   expect((await template).suggestedFilename()).toContain("template.csv");
@@ -229,10 +239,7 @@ test("trade edit/delete, downloads, rules, reports and mobile navigation", async
   await rules.fill(original);
   await page.getByRole("button", { name: "保存模拟规则" }).click();
   await expect(page.getByRole("status")).toContainText("模拟参数已保存");
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "持仓诊断" })
-    .click();
+  await clickNav(page, "持仓诊断");
   await page.getByRole("combobox", { name: "报告类型" }).selectOption("weekly");
   await page.getByRole("button", { name: "生成报告" }).click();
   const report = page.waitForEvent("download");
@@ -240,10 +247,7 @@ test("trade edit/delete, downloads, rules, reports and mobile navigation", async
   expect((await report).suggestedFilename()).toMatch(/report-\d+\.json/);
   await page.getByRole("button", { name: "关闭提示" }).click();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "资产总览" })
-    .click();
+  await clickNav(page, "资产总览");
   await page.getByRole("button", { name: "切换深色模式" }).click();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
@@ -259,7 +263,7 @@ test("trade edit/delete, downloads, rules, reports and mobile navigation", async
     "风控中心",
     "导入与设置",
   ]) {
-    await page.getByRole("navigation").getByRole("button", { name }).click();
+    await clickNav(page, name);
     await expect(
       page.getByRole("heading", { name, exact: true }).first(),
     ).toBeVisible();
@@ -289,16 +293,13 @@ test("transport boundary and per-page runtime errors", async ({ page }) => {
     "风控中心",
     "导入与设置",
   ]) {
-    await page.getByRole("navigation").getByRole("button", { name }).click();
+    await clickNav(page, name);
     await expect(
       page.getByRole("heading", { name, exact: true }).first(),
     ).toBeVisible();
   }
   if (offline || hostedDemo) await page.context().setOffline(true);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "持仓诊断" })
-    .click();
+  await clickNav(page, "持仓诊断");
   await page.getByRole("button", { name: "生成报告" }).click();
   await expect(
     page.getByRole("button", { name: "下载 JSON" }).first(),
