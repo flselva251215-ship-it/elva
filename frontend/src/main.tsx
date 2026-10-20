@@ -2479,6 +2479,7 @@ function App() {
               className="text-button beginner-mode-trigger"
               type="button"
               aria-pressed={beginnerMode}
+              aria-label={beginnerMode ? "切换到专业模式" : "开启新手模式"}
               onClick={() => setBeginnerMode((active) => !active)}
               title="新手模式与专业模式可随时切换"
             >
