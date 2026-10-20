@@ -12,7 +12,7 @@ async function clickNav(page, name) {
   const nav = page.getByRole("navigation", { name: "功能导航" });
   const group = nav.getByRole("button", { name: groupForMenuItem[name], exact: true });
   if ((await group.getAttribute("aria-expanded")) !== "true") await group.click();
-  await nav.getByRole("button", { name, exact: true }).click();
+  await nav.getByRole("button", { name }).click();
 }
 
 const offline = process.env.STOCKPILOT_OFFLINE_TEST === "1";
