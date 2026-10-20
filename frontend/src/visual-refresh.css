@@ -1,0 +1,124 @@
+/* Visual overview refresh: display only, no changes to calculations or data sources. */
+.stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.stat-grid .stat {
+  padding: 20px 22px;
+}
+.stat-grid .stat h2 {
+  font-size: clamp(22px, 2.1vw, 30px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.22;
+}
+.stat-grid .dashboard-stat-hidden {
+  display: none;
+}
+.dashboard-more-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 4px 0;
+  margin: 0 0 17px;
+  background: transparent;
+  border: 0;
+  color: #007aff;
+  font-size: 12px;
+  font-weight: 550;
+}
+.dashboard-more-button:hover {
+  color: #0058bd;
+  text-decoration: underline;
+}
+.dashboard-more-button svg {
+  transition: transform 150ms ease;
+}
+.dashboard-more-button[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+.dashboard-grid {
+  grid-template-columns: minmax(0, 1.75fr) minmax(260px, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.dashboard-grid .panel {
+  border-radius: 17px;
+}
+.home-shortcuts {
+  margin-bottom: 18px;
+  gap: 10px;
+}
+.home-shortcuts > button {
+  min-height: 80px;
+}
+.allocation .alloc-list > div {
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 8px 0 10px;
+}
+.allocation-meter {
+  flex-basis: 100%;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+.allocation-meter span {
+  display: block;
+  height: 100%;
+  background: #88a9dc;
+  border-radius: inherit;
+}
+.home-risk-summary {
+  margin-top: 3px;
+}
+[data-theme="dark"] .dashboard-more-button {
+  color: #80b6ff;
+}
+[data-theme="dark"] .allocation-meter span {
+  background: #8caee2;
+}
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(225px, 1fr);
+  }
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .stat-grid .stat {
+    padding: 15px;
+  }
+  .stat-grid .stat:first-child {
+    grid-column: 1 / -1;
+  }
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .dashboard-more-button {
+    font-size: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-grid .stat:first-child {
+    grid-column: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-more-button svg {
+    transition: none;
+  }
+}
