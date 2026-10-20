@@ -696,7 +696,8 @@ function Dashboard({
       )}
       <div
         id="beginner-expanded-dashboard"
-        className={beginner && !showLearningMore ? "beginner-dashboard-collapsed" : undefined}
+        className="beginner-expanded-dashboard"
+        hidden={beginner && !showLearningMore}
       >
       <div className="dashboard-grid">
         {real ? (
