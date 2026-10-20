@@ -49,6 +49,7 @@ import { isOffline, offlinePersistent } from "./offline";
 import "./style.css";
 import "./enhancements.css";
 import "./apple.css";
+import "./visual-refresh.css";
 import { MarketConnection } from "./MarketConnection";
 import { EquityChart } from "./EquityChart";
 
@@ -462,6 +463,7 @@ function Dashboard({
   navigate: (p: number) => void;
   diagnose: (s: string) => void;
 }) {
+  const [showDetails, setShowDetails] = useState(false);
   const p = data.portfolio;
   const real = data.feed?.mode === "real";
   const total = p.accounts.length === 1 ? p.accounts[0] : p.combined;
@@ -542,7 +544,7 @@ function Dashboard({
             已实现 + 未实现 <strong>{percent(total.return_pct)}</strong>
           </p>
         </article>
-        <article className="stat">
+        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
           <div>
             未实现盈亏 <Activity size={17} />
           </div>
@@ -556,7 +558,7 @@ function Dashboard({
             </strong>
           </p>
         </article>
-        <article className="stat">
+        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
           <div>
             可用现金 <ArrowDownLeft size={17} />
           </div>
@@ -565,7 +567,7 @@ function Dashboard({
             已实现收益 <strong>{amount(total.realized, currency)}</strong>
           </p>
         </article>
-        <article className="stat">
+        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
           <div>
             风险待复核 <Shield size={17} />
           </div>
@@ -581,35 +583,15 @@ function Dashboard({
           </p>
         </article>
       </div>
-      <div className="home-shortcuts">
-        <button onClick={() => navigate(1)}>
-          <Wallet size={20} />
-          <strong>美股与 A 股持仓</strong>
-          <small>
-            {p.positions.filter((x) => x.market === "US").length} 只美股 ·{" "}
-            {p.positions.filter((x) => x.market === "CN").length} 只 A 股
-          </small>
-          <ChevronRight size={16} />
-        </button>
-        <button onClick={() => navigate(3)}>
-          <Star size={20} />
-          <strong>股票观察池</strong>
-          <small>{data.watchlist.length} 个收藏 · 点击查看研究</small>
-          <ChevronRight size={16} />
-        </button>
-        <button onClick={() => navigate(4)}>
-          <FlaskConical size={20} />
-          <strong>模拟交易</strong>
-          <small>虚拟资金 · 无实盘连接</small>
-          <ChevronRight size={16} />
-        </button>
-        <button onClick={() => navigate(2)}>
-          <BookOpen size={20} />
-          <strong>分析报告</strong>
-          <small>日报 / 周报快照与下载</small>
-          <ChevronRight size={16} />
-        </button>
-      </div>
+      <button
+        type="button"
+        className="dashboard-more-button"
+        aria-expanded={showDetails}
+        onClick={() => setShowDetails((current) => !current)}
+      >
+        {showDetails ? "收起次要指标" : "查看现金、浮动盈亏与风险指标"}
+        <ChevronRight size={15} aria-hidden="true" />
+      </button>
       <div className="dashboard-grid">
         {real ? (
           <EquityChart revision={data.portfolio.as_of} />
@@ -688,6 +670,9 @@ function Dashboard({
                         {sector}
                       </span>
                       <strong>{percent(weight)}</strong>
+                      <div className="allocation-meter" aria-hidden="true">
+                        <span style={{ width: `${Math.max(0, Math.min(100, Number(weight) * 100))}%` }} />
+                      </div>
                     </div>
                   ),
                 )}
@@ -706,6 +691,35 @@ function Dashboard({
             </>
           )}
         </section>
+      </div>
+      <div className="home-shortcuts">
+        <button onClick={() => navigate(1)}>
+          <Wallet size={20} />
+          <strong>美股与 A 股持仓</strong>
+          <small>
+            {p.positions.filter((x) => x.market === "US").length} 只美股 ·{" "}
+            {p.positions.filter((x) => x.market === "CN").length} 只 A 股
+          </small>
+          <ChevronRight size={16} />
+        </button>
+        <button onClick={() => navigate(3)}>
+          <Star size={20} />
+          <strong>股票观察池</strong>
+          <small>{data.watchlist.length} 个收藏 · 点击查看研究</small>
+          <ChevronRight size={16} />
+        </button>
+        <button onClick={() => navigate(4)}>
+          <FlaskConical size={20} />
+          <strong>模拟交易</strong>
+          <small>虚拟资金 · 无实盘连接</small>
+          <ChevronRight size={16} />
+        </button>
+        <button onClick={() => navigate(2)}>
+          <BookOpen size={20} />
+          <strong>分析报告</strong>
+          <small>日报 / 周报快照与下载</small>
+          <ChevronRight size={16} />
+        </button>
       </div>
       <div className="home-risk-summary">
         <Shield size={18} />
