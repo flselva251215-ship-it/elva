@@ -486,3 +486,70 @@
   .beginner-mode-trigger svg { width: 17px; height: 17px; }
   .topbar .breadcrumb { display: none; }
 }
+
+
+/* Quiet beginner overview: clear priorities, one visible learning takeaway. */
+.beginner-keyline {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  border-left: 3px solid #597e99;
+  border-radius: 3px 9px 9px 3px;
+  background: var(--soft);
+  color: var(--ink);
+  line-height: 1.7;
+  font-size: 12px;
+}
+.beginner-keyline strong {
+  font-weight: 630;
+  min-width: 0;
+}
+.beginner-highlight {
+  flex-shrink: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 750;
+  text-decoration: underline;
+  text-decoration-color: #d6a84e;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 5px;
+}
+.beginner-more-dashboard {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 18px;
+  margin: 12px 0 22px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.beginner-more-dashboard:hover { background: var(--soft); }
+.beginner-more-dashboard:focus-visible {
+  outline: 2px solid #007aff;
+  outline-offset: 2px;
+}
+.beginner-more-dashboard > svg:last-child { transition: transform 180ms ease; }
+.beginner-more-dashboard[aria-expanded="true"] > svg:last-child { transform: rotate(90deg); }
+.beginner-expanded-dashboard[hidden] { display: none !important; }
+.beginner-expanded-dashboard > .dashboard-grid { margin-top: 18px; }
+@media (max-width: 700px) {
+  .beginner-keyline {
+    flex-direction: column;
+    gap: 5px;
+    padding: 11px 12px;
+    font-size: 11px;
+  }
+  .beginner-more-dashboard { margin: 9px 0 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .beginner-more-dashboard > svg:last-child { transition: none; }
+}
