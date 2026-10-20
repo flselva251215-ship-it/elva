@@ -186,6 +186,8 @@ test("theme, interactive chart, help, account switch and all home shortcuts", as
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(start);
   await expect(page.getByRole("heading", { name: "当前持仓" })).toBeVisible();
+  await expect(page.getByText("暂无今日行情")).toBeHidden();
+  await page.getByRole("button", { name: "展开总资产、今日盈亏与现金明细" }).click();
   await expect(page.getByText("暂无今日行情")).toBeVisible();
   await page.getByRole("button", { name: "使用指南" }).click();
   await expect(page.getByRole("dialog")).toContainText("导入持仓");
