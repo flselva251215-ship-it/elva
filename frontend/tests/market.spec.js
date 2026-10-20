@@ -1,4 +1,20 @@
 import { test, expect } from "@playwright/test";
+const groupForMenuItem = {
+  "资产总览": "资产管理",
+  "我的持仓": "资产管理",
+  "持仓诊断": "研究分析",
+  "股票研究": "研究分析",
+  "模拟交易": "交易与风控",
+  "风控中心": "交易与风控",
+  "导入与设置": "系统设置",
+};
+async function clickNav(page, name) {
+  const nav = page.getByRole("navigation", { name: "功能导航" });
+  const group = nav.getByRole("button", { name: groupForMenuItem[name], exact: true });
+  if ((await group.getAttribute("aria-expanded")) !== "true") await group.click();
+  await nav.getByRole("button", { name }).click();
+}
+
 
 test.beforeEach(async ({ request }) => {
   await request.put("/api/market-data/settings", {
@@ -25,7 +41,11 @@ test("real mode never substitutes demo prices or FX and shows Apple-style connec
   await expect(page.getByText("真实日线模式：")).toBeVisible();
   const result = await (await request.get("/api/positions")).json();
   expect(result.combined.equity).toBeNull();
-  expect(result.fx).toBeNull();
+  if (result.fx !== null) {
+    // A genuine FX quote may be available even when stock data licences are not.
+    expect(result.fx.provenance?.real).toBe(true);
+    expect(result.fx.source).not.toMatch(/demo|模拟|样例/i);
+  }
   expect(result.positions.every((p) => p.price === null && !p.demo)).toBe(true);
   await expect(
     page.getByText("无法计算完整持仓分布", { exact: false }),
@@ -71,10 +91,7 @@ test("mode switch is explicit, upstream rights cannot be replaced by MIT and no 
   request,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "导入与设置" })
-    .click();
+  await clickNav(page, "导入与设置");
   await page.getByRole("combobox", { name: "行情模式" }).selectOption("demo");
   await page.getByRole("button", { name: "保存行情设置" }).click();
   await expect(page.getByRole("status")).toContainText("未开通任何付费服务");
