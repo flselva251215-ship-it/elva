@@ -16,8 +16,14 @@ async function clickNav(page, name) {
 }
 
 async function expandLearningDashboard(page) {
+  const panel = page.locator("#beginner-expanded-dashboard");
   const toggle = page.getByRole("button", { name: "展开图表、持仓与进阶分析" });
-  if (await toggle.isVisible()) await toggle.click();
+  const collapsed = await panel.isHidden();
+  if (collapsed) {
+    await expect(toggle).toBeVisible();
+    await toggle.click();
+  }
+  await expect(panel).toBeVisible();
 }
 
 const offline = process.env.STOCKPILOT_OFFLINE_TEST === "1";
@@ -43,6 +49,8 @@ test("beginner mode: learning steps glossary, navigation and persistent expert t
   await expect(guide.getByText("风控中心：学习给自己设定边界")).toBeVisible();
   await page.getByRole("button", { name: "切换到专业模式" }).click();
   await expect(guide).toHaveCount(0);
+  await clickNav(page, "资产总览");
+  await expect(page.getByRole("heading", { name: "当前持仓" })).toBeVisible();
   await page.reload();
   await expect(guide).toHaveCount(0);
   await page.getByRole("button", { name: "开启新手模式" }).click();
