@@ -21,6 +21,30 @@ const start = offline
   ? "http://127.0.0.1:8012/StockPilot-%E6%BC%94%E7%A4%BA%E4%BD%93%E9%AA%8C.html"
   : "/";
 
+test("beginner mode: learning steps glossary, navigation and persistent expert toggle", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(start);
+  const guide = page.getByRole("region", { name: "新手学习指南" });
+  await expect(guide).toBeVisible();
+  await expect(guide.getByText("从这里开始：先看懂收益、风险，再考虑配置")).toBeVisible();
+  await expect(guide.getByText("你看到的是虚构的演示行情和初始持仓", { exact: false })).toBeVisible();
+  await guide.getByText("不懂这些词？打开股票小词典").click();
+  await expect(guide.getByText("回撤", { exact: true })).toBeVisible();
+  await guide.getByRole("button", { name: "第 2 步：认识风险" }).click();
+  await expect(page.getByRole("heading", { name: "风控中心", exact: true }).first()).toBeVisible();
+  await expect(guide.getByText("风控中心：学习给自己设定边界")).toBeVisible();
+  await page.getByRole("button", { name: "切换到专业模式" }).click();
+  await expect(guide).toHaveCount(0);
+  await page.reload();
+  await expect(guide).toHaveCount(0);
+  await page.getByRole("button", { name: "开启新手模式" }).click();
+  await expect(guide).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await clickNav(page, "资产总览");
+  await expect(guide.getByRole("button", { name: "第 3 步：模拟练习" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test("navigation: four collapsible groups work on desktop and mobile", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(start);
