@@ -51,6 +51,7 @@ import "./enhancements.css";
 import "./apple.css";
 import "./visual-refresh.css";
 import { MarketConnection } from "./MarketConnection";
+import { BeginnerGuide } from "./BeginnerGuide";
 import { EquityChart } from "./EquityChart";
 
 const pages = [
@@ -2266,6 +2267,13 @@ function App() {
     [stock, setStock] = useState<Stock | null>(null),
     [modal, setModal] = useState<{ trade: Trade | null } | null>(null),
     [showGuide, setShowGuide] = useState(false),
+    [beginnerMode, setBeginnerMode] = useState(() => {
+      try {
+        return localStorage.getItem("stockpilot-beginner-mode") !== "advanced";
+      } catch {
+        return true;
+      }
+    }),
     [theme, setTheme] = useState(() => {
       try {
         return (
@@ -2279,6 +2287,13 @@ function App() {
       }
     });
   const [expandedGroup, setExpandedGroup] = useState<number | null>(0);
+  useEffect(() => {
+    try {
+      localStorage.setItem("stockpilot-beginner-mode", beginnerMode ? "beginner" : "advanced");
+    } catch {
+      /* Beginner mode remains usable when browser storage is disabled. */
+    }
+  }, [beginnerMode]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
@@ -2461,6 +2476,16 @@ function App() {
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
+              className="text-button beginner-mode-trigger"
+              type="button"
+              aria-pressed={beginnerMode}
+              onClick={() => setBeginnerMode((active) => !active)}
+              title="新手模式与专业模式可随时切换"
+            >
+              <BookOpen size={16} aria-hidden="true" />
+              {beginnerMode ? "新手模式 · 开" : "开启新手模式"}
+            </button>
+            <button
               className="text-button guide-trigger"
               onClick={() => setShowGuide(true)}
             >
@@ -2586,6 +2611,9 @@ function App() {
                 </button>
               </div>
             </div>
+          )}
+          {data && beginnerMode && (
+            <BeginnerGuide page={page} navigate={navigate} demo={data.feed?.mode !== "real"} />
           )}
           {!data ? (
             <div className="loading">
