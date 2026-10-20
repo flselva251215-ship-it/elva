@@ -475,6 +475,73 @@ function Dashboard({
   const real = data.feed?.mode === "real";
   const total = p.accounts.length === 1 ? p.accounts[0] : p.combined;
   const currency = total.currency;
+  // Only turn existing portfolio and risk-policy data into explainable observations.
+  const highAlerts = data.risk.alerts.filter((alert) => alert.level === "high");
+  const keyAlert = highAlerts[0] || data.risk.alerts[0];
+  const equity = total.equity === null ? null : Number(total.equity);
+  const cashRatio =
+    equity !== null && Number.isFinite(equity) && equity > 0 && total.cash !== null
+      ? Number(total.cash) / equity
+      : null;
+  const cashFloor = Number(data.risk.policy.cash_floor);
+  const sectorLimit = Number(data.risk.policy.sector_limit);
+  const largestSector = Object.entries(data.risk.sectors).sort(
+    (a, b) => Number(b[1]) - Number(a[1]),
+  )[0];
+  const allocationValid = cashRatio !== null && Number.isFinite(cashRatio);
+  const allocationNotes = [
+    !allocationValid
+      ? {
+          title: "先核对资产估值",
+          detail: "报价或汇率缺失，现金占比及完整配置暂不可计算；请先核对数据来源。",
+          page: 6,
+        }
+      : cashRatio < cashFloor
+        ? {
+            title: "检查现金缓冲",
+            detail: `现金占比 ${percent(cashRatio)}，低于当前规则底线 ${percent(cashFloor)}；先评估流动性需求与风险预算。`,
+            page: 5,
+          }
+        : {
+            title: "现金缓冲符合规则",
+            detail: `现金占比 ${percent(cashRatio)}，当前规则底线为 ${percent(cashFloor)}；仍需结合个人资金需求复核。`,
+            page: 5,
+          },
+    !allocationValid || !largestSector
+      ? {
+          title: "行业分布有待确认",
+          detail: "完整估值不足，暂不判断行业集中度；可先切换单账户查看。",
+          page: 1,
+        }
+      : Number(largestSector[1]) > sectorLimit
+        ? {
+            title: "关注行业集中度",
+            detail: `${largestSector[0]}占比 ${percent(largestSector[1])}，超过规则上限 ${percent(sectorLimit)}；可核查敞口是否符合预设约束。`,
+            page: 5,
+          }
+        : {
+            title: "复核最大行业敞口",
+            detail: `${largestSector[0]}占比 ${percent(largestSector[1])}，规则上限 ${percent(sectorLimit)}；当前未见这一项超限。`,
+            page: 5,
+          },
+    highAlerts.length
+      ? {
+          title: "优先复核高优先级风险",
+          detail: `目前有 ${highAlerts.length} 项高优先级提醒；请先核查规则和行情时效，再评估任何调仓方案。`,
+          page: 5,
+        }
+      : data.risk.alerts.length
+        ? {
+            title: "核对风险提醒",
+            detail: `当前有 ${data.risk.alerts.length} 项提醒，可能包含数据时效或汇率提示；暂无高优先级不代表没有风险。`,
+            page: 5,
+          }
+        : {
+            title: "定期复查风险约束",
+            detail: "当前没有触发规则提醒；这不代表风险为零，仍需检查行情时效和个人承受能力。",
+            page: 5,
+          },
+  ];
   const colors = ["#237861", "#68ab94", "#a1c6b6", "#d8bc77"];
   let cumulative = 0;
   const slices = Object.values(data.risk.sectors).map((weight, i) => {
@@ -500,94 +567,75 @@ function Dashboard({
           <span>INVEST WITH CLARITY</span>
         </div>
       </section>
-      <div className="stat-grid">
-        <article className="stat primary">
+      <div className="stat-grid overview-priority-grid">
+        <article className="stat primary overview-profit">
           <div>
-            总资产 <Wallet size={17} />
-          </div>
-          <h2>{amount(total.equity, currency)}</h2>
-          <p>
-            {p.accounts.length === 1
-              ? "所选账户 · 原币"
-              : real
-                ? "CNY 合并 · 需真实汇率"
-                : "CNY 合并 · 使用演示汇率"}{" "}
-            <span>含现金与股票市值</span>
-          </p>
-        </article>
-        <article className="stat">
-          <div>
-            今日盈亏 <Activity size={17} />
-          </div>
-          <h2
-            className={
-              total.today_pnl === null ? "unavailable" : tone(total.today_pnl)
-            }
-          >
-            {total.today_pnl === null
-              ? real
-                ? "盘中收益暂不计算"
-                : "暂无今日行情"
-              : amount(total.today_pnl, currency)}
-          </h2>
-          <p>
-            {real ? "最近参考交易日" : "最近样例交易日"}{" "}
-            <strong className={tone(total.latest_session_pnl)}>
-              {amount(total.latest_session_pnl, currency)}
-            </strong>
-          </p>
-          <small>
-            {total.latest_session_date || "暂无日期"} · 不冒充今日行情
-          </small>
-        </article>
-        <article className="stat">
-          <div>
-            累计盈亏 <Activity size={17} />
+            当前收益状况 <Activity size={17} />
           </div>
           <h2 className={tone(total.total_pnl)}>
             {amount(total.total_pnl, currency)}
           </h2>
-          <p>
-            已实现 + 未实现 <strong>{percent(total.return_pct)}</strong>
+          <p className="overview-large-percent">
+            <strong className={tone(total.return_pct)}>{percent(total.return_pct)}</strong>
+            <span>累计收益率 · 已实现 + 未实现</span>
           </p>
+          <small>
+            {real ? "按可用的真实日线估值，非盘中实时收益" : "虚构样例收益，并非真实账户业绩"}
+          </small>
         </article>
-        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
+        <article className="stat overview-risk">
           <div>
-            未实现盈亏 <Activity size={17} />
+            风险评估 <Shield size={17} />
           </div>
-          <h2 className={tone(total.unrealized)}>
-            {amount(total.unrealized, currency)}
+          <h2>{highAlerts.length} <span className="unit">项高优先级</span></h2>
+          <p className={highAlerts.length ? "overview-risk-warning" : ""}>
+            {data.risk.alerts.length} 项规则提醒
+          </p>
+          <small>{keyAlert ? `${keyAlert.symbol}：${keyAlert.message}` : "当前没有触发提醒，不代表无风险"}</small>
+          <button type="button" className="text-button overview-inline-action" onClick={() => navigate(5)}>
+            查看风险详情 <ArrowRight size={13} />
+          </button>
+        </article>
+        <article className="stat overview-allocation">
+          <div>
+            资金配置观察 <Wallet size={17} />
+          </div>
+          <h2 className={allocationValid && cashRatio < cashFloor ? "overview-risk-warning" : ""}>
+            {allocationValid ? percent(cashRatio) : "暂不可计算"}
           </h2>
-          <p>
-            累计收益率{" "}
-            <strong className={tone(total.return_pct)}>
-              {percent(total.return_pct)}
-            </strong>
-          </p>
+          <p>当前现金占比 · 规则底线 <strong>{percent(cashFloor)}</strong></p>
+          <div
+            className="overview-cash-track"
+            role="img"
+            aria-label={allocationValid ? `现金占比 ${percent(cashRatio)}，规则底线 ${percent(cashFloor)}` : "暂无可用现金占比"}
+          >
+            {allocationValid && <span style={{ width: `${Math.max(0, Math.min(100, cashRatio * 100))}%` }} />}
+            <i style={{ left: `${Math.max(0, Math.min(100, cashFloor * 100))}%` }} />
+          </div>
+          <small>{allocationValid ? "进度条显示现金占比，刻度为现有现金下限" : "报价或汇率可能缺失，请查看数据设置"}</small>
         </article>
         <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
-          <div>
-            可用现金 <ArrowDownLeft size={17} />
-          </div>
+          <div>总资产 <Wallet size={17} /></div>
+          <h2>{amount(total.equity, currency)}</h2>
+          <p>{p.accounts.length === 1 ? "所选账户 · 原币" : real ? "CNY 合并 · 需真实汇率" : "CNY 合并 · 使用演示汇率"} · 含现金与股票市值</p>
+        </article>
+        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
+          <div>今日盈亏 <Activity size={17} /></div>
+          <h2 className={total.today_pnl === null ? "unavailable" : tone(total.today_pnl)}>
+            {total.today_pnl === null ? real ? "盘中收益暂不计算" : "暂无今日行情" : amount(total.today_pnl, currency)}
+          </h2>
+          <p>{real ? "最近参考交易日" : "最近样例交易日"} <strong>{amount(total.latest_session_pnl, currency)}</strong></p>
+          <small>{total.latest_session_date || "暂无日期"} · 不冒充今日行情</small>
+        </article>
+        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
+          <div>未实现盈亏 <Activity size={17} /></div>
+          <h2 className={tone(total.unrealized)}>{amount(total.unrealized, currency)}</h2>
+          <p>已实现收益 <strong>{amount(total.realized, currency)}</strong></p>
+        </article>
+        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
+          <div>可用现金 <ArrowDownLeft size={17} /></div>
           <h2>{amount(total.cash, currency)}</h2>
-          <p>
-            已实现收益 <strong>{amount(total.realized, currency)}</strong>
-          </p>
-        </article>
-        <article className={`stat ${showDetails ? "" : "dashboard-stat-hidden"}`}>
-          <div>
-            风险待复核 <Shield size={17} />
-          </div>
-          <h2>
-            {data.risk.alerts.length}
-            <span className="unit">项提示</span>
-          </h2>
-          <p>
-            <span className="amber-dot" /> 含数据时效及持仓风险{" "}
-            <button className="text-button" onClick={() => navigate(5)}>
-              查看 <ArrowRight size={13} />
-            </button>
-          </p>
+          <p>资金安排需参考现金下限和个人约束</p>
         </article>
       </div>
       <button
@@ -596,9 +644,39 @@ function Dashboard({
         aria-expanded={showDetails}
         onClick={() => setShowDetails((current) => !current)}
       >
-        {showDetails ? "收起次要指标" : "查看现金、浮动盈亏与风险指标"}
+        {showDetails ? "收起收益与资产明细" : "展开总资产、今日盈亏与现金明细"}
         <ChevronRight size={15} aria-hidden="true" />
       </button>
+      <section className="panel overview-advice" aria-label="配置观察与行动参考">
+        <div className="panel-heading">
+          <div>
+            <h3>配置观察与行动参考 <Badge kind="green">规则分析</Badge></h3>
+            <p>基于当前持仓、现金下限和风险预警生成；用于复核，不是自动买卖指令。</p>
+          </div>
+          <button className="text-button" onClick={() => navigate(5)}>
+            风险规则 <ArrowRight size={14} />
+          </button>
+        </div>
+        <div className="overview-advice-list">
+          {allocationNotes.map((note, index) => (
+            <article key={note.title} className="overview-advice-item">
+              <span className="overview-advice-index" aria-hidden="true">{index + 1}</span>
+              <div>
+                <strong>{note.title}</strong>
+                <p>{note.detail}</p>
+              </div>
+              <button type="button" className="text-button" onClick={() => navigate(note.page)}>
+                查看依据 <ArrowRight size={13} />
+              </button>
+            </article>
+          ))}
+        </div>
+        <p className="overview-advice-footnote">
+          {real
+            ? "行情可能延迟、缺失，账户仍可能含演示持仓；核实资产数据后再评估实际决策。"
+            : "目前使用虚构演示行情和账本，展示的是规则如何分析，并非对真实投资组合的个性化建议。"}
+        </p>
+      </section>
       <div className="dashboard-grid">
         {real ? (
           <EquityChart revision={data.portfolio.as_of} />
