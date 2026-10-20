@@ -41,7 +41,11 @@ test("real mode never substitutes demo prices or FX and shows Apple-style connec
   await expect(page.getByText("真实日线模式：")).toBeVisible();
   const result = await (await request.get("/api/positions")).json();
   expect(result.combined.equity).toBeNull();
-  expect(result.fx).toBeNull();
+  if (result.fx !== null) {
+    // A genuine FX quote may be available even when stock data licences are not.
+    expect(result.fx.provenance?.real).toBe(true);
+    expect(result.fx.source).not.toMatch(/demo|模拟|样例/i);
+  }
   expect(result.positions.every((p) => p.price === null && !p.demo)).toBe(true);
   await expect(
     page.getByText("无法计算完整持仓分布", { exact: false }),
