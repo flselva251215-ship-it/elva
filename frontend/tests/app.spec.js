@@ -15,6 +15,11 @@ async function clickNav(page, name) {
   await nav.getByRole("button", { name }).click();
 }
 
+async function expandLearningDashboard(page) {
+  const toggle = page.getByRole("button", { name: "展开图表、持仓与进阶分析" });
+  if (await toggle.isVisible()) await toggle.click();
+}
+
 const offline = process.env.STOCKPILOT_OFFLINE_TEST === "1";
 const hostedDemo = process.env.STOCKPILOT_HOSTED_DEMO_TEST === "1";
 const start = offline
@@ -26,6 +31,9 @@ test("beginner mode: learning steps glossary, navigation and persistent expert t
   await page.goto(start);
   const guide = page.getByRole("region", { name: "新手学习指南" });
   await expect(guide).toBeVisible();
+  await expect(guide.locator(".beginner-keyline")).toContainText("先看收益率，再看风险原因");
+  await expect(guide.locator("mark.beginner-highlight")).toHaveText("划重点");
+  await expect(page.getByRole("heading", { name: "当前持仓" })).toBeHidden();
   await expect(guide.getByText("从这里开始：先看懂收益、风险，再考虑配置")).toBeVisible();
   await expect(guide.getByText("你看到的是虚构的演示行情和初始持仓", { exact: false })).toBeVisible();
   await guide.getByText("不懂这些词？打开股票小词典").click();
@@ -42,6 +50,9 @@ test("beginner mode: learning steps glossary, navigation and persistent expert t
   await page.setViewportSize({ width: 390, height: 844 });
   await clickNav(page, "资产总览");
   await expect(guide.getByRole("button", { name: "第 3 步：模拟练习" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "当前持仓" })).toBeHidden();
+  await expandLearningDashboard(page);
+  await expect(page.getByRole("heading", { name: "当前持仓" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -76,6 +87,8 @@ test("overview: performance risk and allocation guidance appear first", async ({
   await expect(priority.getByText("资金配置观察", { exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "配置观察与行动参考" })).toBeVisible();
   await expect(page.locator(".overview-advice-item")).toHaveCount(3);
+  await expect(page.getByRole("button", { name: "展开图表、持仓与进阶分析" })).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("heading", { name: "当前持仓" })).toBeHidden();
   await expect(priority.getByText("总资产", { exact: true })).toBeHidden();
   await page.getByRole("button", { name: "展开总资产、今日盈亏与现金明细" }).click();
   await expect(priority.getByText("总资产", { exact: true })).toBeVisible();
@@ -96,6 +109,7 @@ test("desktop: dashboard, diagnostics, research, rules and import", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(start);
+  await expandLearningDashboard(page);
   await expect(page.getByRole("heading", { name: "当前持仓" })).toBeVisible();
   await expect(
     page.getByText("全部行情、汇率和初始资产均为虚构样例"),
@@ -175,6 +189,7 @@ test("mobile: responsive navigation, editable trade and CSV errors", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(start);
+  await expandLearningDashboard(page);
   await expect(page.getByRole("heading", { name: "当前持仓" })).toBeVisible();
   expect(
     await page.evaluate(
@@ -209,6 +224,7 @@ test("theme, interactive chart, help, account switch and all home shortcuts", as
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(start);
+  await expandLearningDashboard(page);
   await expect(page.getByRole("heading", { name: "当前持仓" })).toBeVisible();
   await expect(page.getByText("暂无今日行情")).toBeHidden();
   await page.getByRole("button", { name: "展开总资产、今日盈亏与现金明细" }).click();
@@ -234,6 +250,7 @@ test("theme, interactive chart, help, account switch and all home shortcuts", as
     fullPage: true,
   });
   await page.reload();
+  await expandLearningDashboard(page);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("button", { name: "切换浅色模式" }).click();
   await page.getByRole("combobox", { name: "账户视图" }).selectOption("2");
@@ -250,6 +267,7 @@ test("theme, interactive chart, help, account switch and all home shortcuts", as
     ["美股与 A 股持仓", "我的持仓"],
   ]) {
     await clickNav(page, "资产总览");
+    await expandLearningDashboard(page);
     await page
       .locator(".home-shortcuts")
       .getByRole("button", { name: new RegExp(button) })
