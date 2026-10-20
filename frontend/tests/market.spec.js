@@ -35,6 +35,7 @@ test("real mode never substitutes demo prices or FX and shows Apple-style connec
 }) => {
   await page.setViewportSize({ width: 1440, height: 1060 });
   await page.goto("/");
+  await page.getByRole("button", { name: "展开图表、持仓与进阶分析" }).click();
   await expect(
     page.getByRole("heading", { name: "资产走势", exact: true }),
   ).toBeVisible();

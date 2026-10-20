@@ -464,14 +464,17 @@ function Dashboard({
   choose,
   navigate,
   diagnose,
+  beginner,
 }: {
   data: Data;
   stock: Stock | null;
   choose: (s: string) => void;
   navigate: (p: number) => void;
   diagnose: (s: string) => void;
+  beginner: boolean;
 }) {
   const [showDetails, setShowDetails] = useState(false);
+  const [showLearningMore, setShowLearningMore] = useState(false);
   const p = data.portfolio;
   const real = data.feed?.mode === "real";
   const total = p.accounts.length === 1 ? p.accounts[0] : p.combined;
@@ -553,7 +556,7 @@ function Dashboard({
   slices.push(`#dce5e0 ${cumulative}% 100%`);
   return (
     <>
-      <section className="welcome">
+      {!beginner && <section className="welcome">
         <div>
           <div className="eyebrow">AI STOCKPILOT</div>
           <h2>投资，一目了然。</h2>
@@ -567,7 +570,7 @@ function Dashboard({
           <Activity size={48} />
           <span>INVEST WITH CLARITY</span>
         </div>
-      </section>
+      </section>}
       <div className="stat-grid overview-priority-grid">
         <article className="stat primary overview-profit">
           <div>
@@ -678,6 +681,24 @@ function Dashboard({
             : "目前使用虚构演示行情和账本，展示的是规则如何分析，并非对真实投资组合的个性化建议。"}
         </p>
       </section>
+      {beginner && (
+        <button
+          type="button"
+          className="beginner-more-dashboard"
+          aria-expanded={showLearningMore}
+          aria-controls="beginner-expanded-dashboard"
+          onClick={() => setShowLearningMore((value) => !value)}
+        >
+          <BookOpen size={17} aria-hidden="true" />
+          {showLearningMore ? "收起图表、持仓与进阶分析" : "展开图表、持仓与进阶分析"}
+          <ChevronRight size={16} aria-hidden="true" />
+        </button>
+      )}
+      <div
+        id="beginner-expanded-dashboard"
+        className="beginner-expanded-dashboard"
+        hidden={beginner && !showLearningMore}
+      >
       <div className="dashboard-grid">
         {real ? (
           <EquityChart revision={data.portfolio.as_of} />
@@ -863,6 +884,7 @@ function Dashboard({
           {p.fx.stale && " · 汇率已过期，请核对参考日期"}
         </p>
       )}
+      </div>
     </>
   );
 }
@@ -2635,6 +2657,7 @@ function App() {
                   choose={setChartSymbol}
                   navigate={navigate}
                   diagnose={diagnose}
+                  beginner={beginnerMode}
                 />
               )}{" "}
               {page === 1 && (
