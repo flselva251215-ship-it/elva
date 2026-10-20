@@ -482,5 +482,7 @@
 @media (max-width: 700px) {
   .beginner-guide { padding: 15px; border-radius: 13px; }
   .beginner-glossary dl { grid-template-columns: 1fr; }
-  .beginner-mode-trigger { font-size: 11px; white-space: nowrap; }
+  .beginner-mode-trigger { font-size: 0; line-height: 0; white-space: nowrap; padding: 8px; flex-shrink: 0; }
+  .beginner-mode-trigger svg { width: 17px; height: 17px; }
+  .topbar .breadcrumb { display: none; }
 }
