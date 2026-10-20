@@ -195,3 +195,138 @@
 @media (prefers-reduced-motion: reduce) {
   .sidebar .nav-group-chevron { transition: none; }
 }
+
+/* Homepage priority: returns, risk and allocation reviews. */
+.overview-priority-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 8px;
+  align-items: stretch;
+}
+.overview-priority-grid .stat {
+  min-width: 0;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.overview-priority-grid .stat.dashboard-stat-hidden {
+  display: none;
+}
+.overview-priority-grid .stat h2 {
+  margin: 4px 0;
+  font-size: clamp(23px, 2.15vw, 32px);
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+.overview-priority-grid .overview-profit {
+  background: linear-gradient(155deg, var(--surface), var(--soft));
+  border-color: var(--border);
+}
+.overview-priority-grid .overview-large-percent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px 12px;
+}
+.overview-priority-grid .overview-large-percent strong {
+  font-size: 20px;
+}
+.overview-priority-grid .overview-large-percent span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.overview-priority-grid .stat > small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.overview-priority-grid .stat .unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.overview-risk-warning { color: #ad6421 !important; }
+.overview-inline-action { align-self: flex-start; margin-top: auto; }
+.overview-cash-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+  margin-top: 4px;
+}
+.overview-cash-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #428bca;
+}
+.overview-cash-track i {
+  position: absolute;
+  top: -3px;
+  height: 16px;
+  width: 2px;
+  border-radius: 3px;
+  background: var(--ink);
+}
+.overview-advice { margin: 14px 0 20px; overflow: hidden; }
+.overview-advice .panel-heading { gap: 12px; }
+.overview-advice-list {
+  display: grid;
+  gap: 0;
+  padding: 2px 24px 6px;
+}
+.overview-advice-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 14px 0;
+}
+.overview-advice-item + .overview-advice-item { border-top: 1px solid var(--border); }
+.overview-advice-index {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--muted);
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 650;
+}
+.overview-advice-item > div { flex: 1; min-width: 0; }
+.overview-advice-item strong { color: var(--ink); font-size: 12px; }
+.overview-advice-item p {
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.overview-advice-item > button { flex-shrink: 0; }
+.overview-advice-footnote {
+  margin: 6px 24px 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 10px;
+}
+[data-theme="dark"] .overview-risk-warning { color: #f3b469 !important; }
+[data-theme="dark"] .overview-cash-track span { background: #80b6ff; }
+@media (max-width: 1100px) {
+  .overview-priority-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview-priority-grid .overview-profit { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .overview-priority-grid { grid-template-columns: 1fr; gap: 10px; }
+  .overview-priority-grid .overview-profit { grid-column: auto; }
+  .overview-priority-grid .stat { padding: 17px; }
+  .overview-advice-list { padding: 0 16px; }
+  .overview-advice-item { gap: 9px; align-items: flex-start; }
+  .overview-advice-item > button { font-size: 10px; align-self: center; }
+  .overview-advice-footnote { margin: 6px 16px 16px; }
+  .overview-advice .panel-heading { flex-wrap: wrap; }
+}
