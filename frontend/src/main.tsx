@@ -62,6 +62,13 @@ const pages = [
   { title: "风控中心", sub: "RISK MANAGEMENT", icon: Shield },
   { title: "导入与设置", sub: "DATA & SETTINGS", icon: Settings2 },
 ];
+const navGroups = [
+  { title: "资产管理", icon: Wallet, pageIds: [0, 1] },
+  { title: "研究分析", icon: BookOpen, pageIds: [2, 3] },
+  { title: "交易与风控", icon: Shield, pageIds: [4, 5] },
+  { title: "系统设置", icon: Settings2, pageIds: [6] },
+];
+
 const amount = (
   value: string | number | null | undefined,
   currency = "",
@@ -2193,6 +2200,7 @@ function App() {
         return "light";
       }
     });
+  const [expandedGroup, setExpandedGroup] = useState<number | null>(0);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
@@ -2271,6 +2279,8 @@ function App() {
   };
   function navigate(p: number) {
     setPage(p);
+    const targetGroup = navGroups.findIndex((group) => group.pageIds.includes(p));
+    if (targetGroup !== -1) setExpandedGroup(targetGroup);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function diagnose(s: string) {
@@ -2296,19 +2306,45 @@ function App() {
           </div>
         </a>
         <div className="workspace-label">个人投资工作台</div>
-        <nav>
-          {pages.map((p, i) => (
-            <button
-              key={p.title}
-              className={i === page ? "active" : ""}
-              onClick={() => navigate(i)}
-            >
-              <p.icon size={19} />
-              <span>{p.title}</span>
-              {i === 2 && <Badge>AI</Badge>}
-              {i === page && <i />}
-            </button>
-          ))}
+        <nav className="sidebar-navigation" aria-label="功能导航">
+          <div className="nav-groups">
+            {navGroups.map((group, groupIndex) => (
+              <div className="nav-group" key={group.title}>
+                <button
+                  type="button"
+                  className={`nav-group-trigger${expandedGroup === groupIndex ? " is-open" : ""}${group.pageIds.includes(page) ? " contains-active" : ""}`}
+                  aria-expanded={expandedGroup === groupIndex}
+                  aria-controls={`nav-group-${groupIndex}`}
+                  onClick={() =>
+                    setExpandedGroup((current) =>
+                      current === groupIndex ? null : groupIndex,
+                    )
+                  }
+                >
+                  <group.icon size={18} aria-hidden="true" />
+                  <span>{group.title}</span>
+                  <ChevronRight className="nav-group-chevron" size={15} aria-hidden="true" />
+                </button>
+                {expandedGroup === groupIndex && (
+                  <div className="nav-group-children" id={`nav-group-${groupIndex}`}>
+                    {group.pageIds.map((index) => (
+                      <button
+                        key={pages[index].title}
+                        type="button"
+                        className={`nav-leaf${index === page ? " active" : ""}`}
+                        aria-current={index === page ? "page" : undefined}
+                        onClick={() => navigate(index)}
+                      >
+                        <span className="nav-leaf-dot" aria-hidden="true" />
+                        <span>{pages[index].title}</span>
+                        {index === 2 && <Badge>AI</Badge>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </nav>
         <div className="sidebar-bottom">
           <div className="safe-card">
